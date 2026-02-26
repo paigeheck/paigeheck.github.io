@@ -1,0 +1,66 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #ccc;
+}
+
+article {
+  width: 210mm;
+  height: 297mm;
+  margin: 20px auto;
+  position: relative;
+
+/* make background white */
+  background-color: white;
+
+/* add border to top and bottom of page */
+  border-top: 1mm solid #b30000;
+  border-bottom: 1mm solid #b30000;
+
+/* gradient */
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.25) 0%,
+      rgba(0,0,0,0) 18%,
+      rgba(0,0,0,0) 82%,
+      rgba(0,0,0,0.25) 100% 
+    ),
+    no-repeat url(media/top.png) top center,
+    no-repeat url(media/bottom.png) bottom center;
+
+/*adding top and bottom images*/
+    background: no-repeat url(media/top.png) top center, no-repeat url(media/bottom.png) bottom center;
+    background-color: white;
+}
+
+address {
+  position: absolute;
+  bottom: 8mm;
+  right: 20mm;
+}
+
+h1 {
+  position: absolute;
+  top: 12mm;
+  left: 20mm;
+  width: 128px;
+  height: 128px;
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 44px 0;
+  color: white;
+  text-shadow: 1px 1px 1px black;
+  /*add background to image*/
+  background: no-repeat url(media/logo.png);
+  /*add drop shadow to logo*/
+  filter: drop-shadow(3px 3px 3px black);
+}
