@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Change Your Volume</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eaf7ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 900px;
+      max-width: 95vw;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .topStuff {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      background: white;
+      border: 2px solid black;
+      border-radius: 10px;
+      padding: 10px 16px;
+      min-width: 180px;
+    }
+
+    .gameArea {
+      position: relative;
+      width: 100%;
+      height: 560px;
+      border: 4px solid black;
+      border-radius: 14px;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #c7efff 0%, #dff8ff 62%, #ccecc7 62%, #bde0b5 100%);
+    }
+
+    .fruit {
+      position: absolute;
+      font-size: 32px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .basket {
+      position: absolute;
+      bottom: 95px;
+      font-size: 54px;
+      width: 80px;
+      height: 60px;
+    }
+
+    .cloud {
+      position: absolute;
+      font-size: 30px;
+      opacity: 0.7;
+    }
+
+    .bottomInfo {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(255,255,255,0.9);
+      border-top: 2px solid black;
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: 2px solid black;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #f1f1f1;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #444;
+      margin-top: 8px;
+    }
+  
+  
+  </style>
+
+
+</head>
+<body>
+  <div class="container">
+    <h1>Change Your Volume</h1>
+
+    <div class="topStuff">
+      <div class="box">Time Left: <span id="timer">60</span>s</div>
+      <div class="box">Volume: <span id="volumeNum">0</span>%</div>
+      <div class="box">Fruit Caught: <span id="score">0</span></div>
+    </div>
+
+
+
+
+    <div class="gameArea" id="gameArea">
+      <div class="cloud" style="top: 25px; left: 50px;">☁️</div>
+      <div class="cloud" style="top: 60px; right: 90px;">☁️</div>
+
+      <div class="basket" id="basket">🧺</div>
+
+      <div class="overlay" id="startScreen">
+        <h2>Set Your Volume</h2>
+        <p>Catch fruit with the basket to set your volume.</p>
+        <p>BEWARE: The basket is trickier then it looks.</p>
+        <p>And some of the fruit will lower your volume.</p>
+        <button id="startBtn">Start</button>
+        <div class="small">🍎 +5 &nbsp; 🍌 +3 &nbsp; 🍊 +2 &nbsp; 🍇 -4</div>
+      </div>
+
+      <div class="overlay hidden" id="endScreen">
+        <h2>Done</h2>
+        <p id="finalText"></p>
+        <button id="restartBtn">Try Again</button>
+      </div>
+
+
+
+      <div class="bottomInfo">
+        <strong>How it works:</strong> Move the basket with the arrow keys and catch falling fruit. Your final score becomes your “volume.” Oh and also, the left/right keys are reversed and some fruit lowers the score. Have fun! :D
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let gameArea = document.getElementById("gameArea");
+    let basket = document.getElementById("basket");
+    let timerText = document.getElementById("timer");
+    let volumeNum = document.getElementById("volumeNum");
+    let scoreText = document.getElementById("score");
+
+    let startScreen = document.getElementById("startScreen");
+    let endScreen = document.getElementById("endScreen");
+    let finalText = document.getElementById("finalText");
+
+    let startBtn = document.getElementById("startBtn");
+    let restartBtn = document.getElementById("restartBtn");
+
+    let score = 0;
+    let timeLeft = 60;
+    let basketX = 390;
+    let leftPressed = false;
+    let rightPressed = false;
+    let fruitList = [];
+    let playing = false;
+
+    let spawnThing;
+    let timerThing;
+    let animationThing;
+
+    let drift = 1;
+
+
+    let fruitChoices = [
+      { icon: "🍎", points: 5 },
+      { icon: "🍌", points: 3 },
+      { icon: "🍊", points: 2 },
+      { icon: "🍇", points: -4 }
+    ];
+
+    function startGame() {
+      clearOldStuff();
+
+      score = 0;
+      timeLeft = 60;
+      basketX = 390;
+      fruitList = [];
+      playing = true;
+
+
+      timerText.textContent = timeLeft;
+      scoreText.textContent = score;
+      volumeNum.textContent = score;
+      basket.style.left = basketX + "px";
+
+      startScreen.classList.add("hidden");
+      endScreen.classList.add("hidden");
+
+      spawnThing = setInterval(makeFruit, 700);
+
+      timerThing = setInterval(function() {
+        timeLeft = timeLeft - 1;
+        timerText.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+
+      gameLoop();
+    }
+
+    function clearOldStuff() {
+      clearInterval(spawnThing);
+      clearInterval(timerThing);
+      cancelAnimationFrame(animationThing);
+
+      let oldFruit = document.querySelectorAll(".fruit");
+      oldFruit.forEach(function(f) {
+        f.remove();
+      
+    
+    });
+    }
+
+    function makeFruit() {
+      if (!playing) return;
+
+      let f = document.createElement("div");
+      f.className = "fruit";
+
+      let choice = fruitChoices[Math.floor(Math.random() * fruitChoices.length)];
+
+
+      f.textContent = choice.icon;
+
+      let x = Math.random() * (gameArea.clientWidth - 50);
+      let y = -30;
+      let speed = 2 + Math.random() * 3;
+
+      f.style.left = x + "px";
+      f.style.top = y + "px";
+
+      gameArea.appendChild(f);
+
+      fruitList.push({
+        el: f,
+        x: x,
+        y: y,
+        speed: speed,
+        points: choice.points
+      
+    });
+   
+}
+
+
+
+    function gameLoop() {
+      if (!playing) return;
+
+      moveBasket();
+      moveFruit();
+      animationThing = requestAnimationFrame(gameLoop);
+    }
+
+
+
+    function moveBasket() {
+      let max = gameArea.clientWidth - 80;
+
+      // reversed on purpose
+      if (leftPressed) {
+        basketX += 6;
+      }
+
+
+
+      if (rightPressed) {
+        basketX -= 6;
+      }
+
+      basketX += drift;
+
+      if (Math.random() < 0.03) {
+        drift = drift * -1;
+      
+    
+    }
+
+      if (basketX < 0) basketX = 0;
+      if (basketX > max) basketX = max;
+
+      basket.style.left = basketX + "px";
+    }
+
+    function moveFruit() {
+      for (let i = fruitList.length - 1; i >= 0; i--) {
+        let fruit = fruitList[i];
+        fruit.y += fruit.speed;
+        fruit.el.style.top = fruit.y + "px";
+
+       
+       
+        let fruitRect = fruit.el.getBoundingClientRect();
+        let basketRect = basket.getBoundingClientRect();
+
+        let hit =
+          fruitRect.bottom >= basketRect.top &&
+          fruitRect.top <= basketRect.bottom &&
+          fruitRect.left <= basketRect.right &&
+          fruitRect.right >= basketRect.left;
+
+        
+        
+          if (hit) {
+          score = score + fruit.points;
+
+          if (score < 0) score = 0;
+          if (score > 100) score = 100;
+
+          scoreText.textContent = score;
+          volumeNum.textContent = score;
+
+          fruit.el.remove();
+          fruitList.splice(i, 1);
+        } else if (fruit.y > gameArea.clientHeight) {
+          fruit.el.remove();
+          fruitList.splice(i, 1);
+        }
+      }
+    
+    }
+
+    function endGame() {
+      playing = false;
+      clearInterval(spawnThing);
+      clearInterval(timerThing);
+      cancelAnimationFrame(animationThing);
+
+      finalText.textContent = "Your final volume is " + score + "%. Try again for a different volume!";
+      endScreen.classList.remove("hidden");
+    }
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "ArrowLeft") {
+        leftPressed = true;
+      }
+      if (e.key === "ArrowRight") {
+        rightPressed = true;
+      }
+    });
+
+    document.addEventListener("keyup", function(e) {
+      if (e.key === "ArrowLeft") {
+        leftPressed = false;
+      }
+      if (e.key === "ArrowRight") {
+        rightPressed = false;
+      }
+    });
+
+ startBtn.addEventListener("click", startGame);
+  restartBtn.addEventListener("click", startGame);
+
+    basket.style.left = basketX + "px";
+  </script>
+</body>
+</html>
